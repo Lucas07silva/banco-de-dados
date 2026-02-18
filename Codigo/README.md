@@ -1,1 +1,0 @@
-Scripit de Sql

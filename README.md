@@ -134,7 +134,6 @@ ORDER BY id DESC;
 ```
 
 ## **Aula 4.1: Chave Estrangeira (Foreign Key)**
-**Professor:** Jefté Goes
 
 ### **O que é Chave Estrangeira?**
 * A **chave estrangeira (FK)** é um campo de uma tabela que aponta para a **chave primária (PK)** de outra tabela.
@@ -168,7 +167,6 @@ ORDER BY id DESC;
 ---
 
 ## **Aula 4.2: Normalização**
-**Professor:** Jefté Goes
 
 ### **Conceito**
 Normalizar um banco de dados é organizar as informações para que cada dado exista apenas uma vez, evitando repetição, erros e "bagunça" nas tabelas.
@@ -197,7 +195,6 @@ Normalizar um banco de dados é organizar as informações para que cada dado ex
 ---
 
 ## **Aula 5: Métodos de Combinação**
-**Professor:** Jefté Goes
 
 ### **JOINS (Adição de Colunas - Horizontal)**
 Conectamos tabelas lateralmente através de uma coluna comum (Chave).
@@ -276,3 +273,57 @@ INSERT INTO Clientes (Id, Nome, Cidade) VALUES
 INSERT INTO Pedidos (Id, ClienteID, ProdutoID, Quantidade, PrecoVenda) VALUES
 (101, 1, 10, 1, 4500.00); -- Maria comprou Notebook
 ```
+## **Aula 6: Funções de Linha Única no SQL**
+
+### **O que são Funções SQL?**
+As **funções SQL** são conjuntos de instruções que recebem um ou mais valores de entrada e retornam um valor de saída para cada linha.
+
+Elas são utilizadas principalmente para:
+* Limpeza de dados (ex: remover espaços)
+* Transformação (ex: alterar formato de texto ou data)
+* Análise rápida de valores por linha
+
+---
+
+### **Funções de Texto (String Functions)**
+
+São usadas para manipular e extrair informações de textos.
+
+* **Manipulação:**
+  * `CONCAT` → une strings  
+  * `UPPER / LOWER` → converte para maiúsculo/minúsculo  
+  * `TRIM` → remove espaços extras  
+  * `REPLACE` → substitui caracteres  
+
+* **Extração e Medida:**
+  * `LEN` → quantidade de caracteres  
+  * `LEFT / RIGHT` → extrai caracteres das extremidades  
+  * `SUBSTRING` → extrai parte do texto de qualquer posição  
+
+* **Exemplo:**
+```sql
+SELECT UPPER(nome), LEN(nome)
+FROM clientes;
+```
+
+## **Aula 7: Funções de Agregação**
+
+### **O que são Funções de Agregação?**
+As **funções de agregação** processam um conjunto de valores e retornam um único resultado resumido.
+
+São muito usadas para transformar dados brutos em informações estratégicas.
+
+---
+
+### **Principais Funções**
+
+* `COUNT` → conta registros  
+* `SUM` → soma valores numéricos  
+* `AVG` → calcula média  
+* `MAX` → maior valor  
+* `MIN` → menor valor  
+
+* **Exemplo:**
+```sql
+SELECT COUNT(*), SUM(preco), AVG(preco)
+FROM produtos;

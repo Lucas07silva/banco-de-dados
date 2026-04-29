@@ -39,3 +39,7 @@ BEGIN
     RAISE NOTICE 'Venda realizada com sucesso!';
 END;
 $$;
+
+
+-- Execucao
+CALL realizar_venda(1, 2);

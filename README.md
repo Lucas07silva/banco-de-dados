@@ -327,3 +327,351 @@ São muito usadas para transformar dados brutos em informações estratégicas.
 ```sql
 SELECT COUNT(*), SUM(preco), AVG(preco)
 FROM produtos;
+```
+# Aula 8: Views (Visões)
+
+## O que é uma View?
+
+Uma **View (Visão)** é uma tabela virtual criada a partir de uma consulta SQL (`SELECT`).
+
+Ela não armazena os dados fisicamente (na maioria dos casos), mas exibe informações provenientes de uma ou mais tabelas.
+
+### Por que usar Views?
+
+* Simplificam consultas complexas.
+* Aumentam a segurança, exibindo apenas dados necessários.
+* Facilitam a reutilização de consultas frequentes.
+* Melhoram a organização do banco de dados.
+
+---
+
+## Sintaxe Básica
+
+```sql
+CREATE VIEW vw_clientes_pedidos AS
+SELECT
+    c.nome,
+    p.id AS pedido_id,
+    p.quantidade
+FROM clientes c
+INNER JOIN pedidos p
+    ON c.id = p.clienteid;
+```
+
+---
+
+## Consultando uma View
+
+```sql
+SELECT * FROM vw_clientes_pedidos;
+```
+
+### Resultado
+
+| nome | pedido_id | quantidade |
+|--------|-----------|------------|
+| Maria Silva | 101 | 1 |
+
+---
+
+## Removendo uma View
+
+```sql
+DROP VIEW vw_clientes_pedidos;
+```
+
+---
+
+# Aula 9: Procedures (Procedimentos Armazenados)
+
+## O que é uma Procedure?
+
+Uma **Procedure** é um conjunto de comandos SQL armazenados no banco de dados que pode ser executado sempre que necessário.
+
+Diferente das funções, procedures podem:
+
+* Alterar dados.
+* Executar várias instruções.
+* Receber parâmetros.
+* Controlar transações.
+
+### Por que usar Procedures?
+
+* Automatizam processos repetitivos.
+* Centralizam regras de negócio.
+* Melhoram a manutenção do sistema.
+* Reduzem a quantidade de código na aplicação.
+
+---
+
+## Exemplo de Procedure
+
+Cadastro automático de cliente:
+
+```sql
+CREATE OR REPLACE PROCEDURE cadastrar_cliente(
+    p_id INT,
+    p_nome VARCHAR,
+    p_cidade VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO clientes(id, nome, cidade)
+    VALUES (p_id, p_nome, p_cidade);
+END;
+$$;
+```
+
+---
+
+## Executando a Procedure
+
+```sql
+CALL cadastrar_cliente(
+    3,
+    'Carlos Souza',
+    'Salvador'
+);
+```
+
+---
+
+## Procedure com Atualização
+
+```sql
+CREATE OR REPLACE PROCEDURE atualizar_preco(
+    p_id INT,
+    p_novo_preco NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE produtos
+    SET precopadrao = p_novo_preco
+    WHERE id = p_id;
+END;
+$$;
+```
+
+---
+
+## Executando
+
+```sql
+CALL atualizar_preco(10, 5000.00);
+```
+
+---
+
+# Aula 10: Functions (Funções)
+
+## O que é uma Function?
+
+Uma **Function (Função)** é um bloco de código SQL que recebe parâmetros e obrigatoriamente retorna um valor.
+
+Pode ser utilizada dentro de consultas SQL.
+
+## Diferença entre Function e Procedure
+
+| Function | Procedure |
+|-----------|------------|
+| Retorna valor | Não é obrigada a retornar |
+| Pode ser usada em SELECT | Não pode ser usada em SELECT |
+| Ideal para cálculos | Ideal para processos |
+
+---
+
+## Exemplo de Function
+
+Calculando o valor total de um pedido:
+
+```sql
+CREATE OR REPLACE FUNCTION calcular_total(
+    p_quantidade INT,
+    p_preco NUMERIC
+)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN p_quantidade * p_preco;
+END;
+$$;
+```
+
+---
+
+## Executando
+
+```sql
+SELECT calcular_total(2, 4500.00);
+```
+
+### Resultado
+
+```text
+9000.00
+```
+
+---
+
+## Function Consultando Dados
+
+```sql
+CREATE OR REPLACE FUNCTION quantidade_pedidos_cliente(
+    p_cliente_id INT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    total INT;
+BEGIN
+    SELECT COUNT(*)
+    INTO total
+    FROM pedidos
+    WHERE clienteid = p_cliente_id;
+
+    RETURN total;
+END;
+$$;
+```
+
+---
+
+## Executando
+
+```sql
+SELECT quantidade_pedidos_cliente(1);
+```
+
+---
+
+# Aula 11: Triggers (Gatilhos)
+
+## O que é uma Trigger?
+
+Uma **Trigger (Gatilho)** é um mecanismo que executa automaticamente uma ação quando ocorre um evento em uma tabela.
+
+Eventos mais comuns:
+
+* `INSERT`
+* `UPDATE`
+* `DELETE`
+
+Uma trigger sempre está associada a uma função que contém a lógica a ser executada.
+
+### Por que usar Triggers?
+
+* Automatizar tarefas.
+* Auditar alterações.
+* Garantir regras de negócio.
+* Manter integridade dos dados.
+
+---
+
+## Estrutura de uma Trigger
+
+1. Criar uma Function.
+2. Associar essa Function a uma Trigger.
+
+---
+
+## Exemplo Prático
+
+### Tabela de Log
+
+```sql
+CREATE TABLE log_clientes (
+    id SERIAL PRIMARY KEY,
+    cliente_id INT,
+    data_alteracao TIMESTAMP
+);
+```
+
+---
+
+### Function da Trigger
+
+```sql
+CREATE OR REPLACE FUNCTION registrar_alteracao_cliente()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO log_clientes(
+        cliente_id,
+        data_alteracao
+    )
+    VALUES(
+        NEW.id,
+        CURRENT_TIMESTAMP
+    );
+
+    RETURN NEW;
+END;
+$$;
+```
+
+---
+
+### Criando a Trigger
+
+```sql
+CREATE TRIGGER trg_cliente_update
+AFTER UPDATE
+ON clientes
+FOR EACH ROW
+EXECUTE FUNCTION registrar_alteracao_cliente();
+```
+
+---
+
+## Funcionamento
+
+Quando um cliente for atualizado:
+
+```sql
+UPDATE clientes
+SET cidade = 'Feira de Santana'
+WHERE id = 1;
+```
+
+Automaticamente será criado um registro em:
+
+```sql
+SELECT * FROM log_clientes;
+```
+
+### Resultado
+
+| id | cliente_id | data_alteracao |
+|----|------------|----------------|
+| 1 | 1 | 2026-06-14 15:30:00 |
+
+---
+
+# Resumo Geral
+
+| Recurso | Finalidade |
+|----------|-----------|
+| **View** | Criar uma tabela virtual baseada em consultas |
+| **Procedure** | Executar processos e operações no banco |
+| **Function** | Retornar valores e realizar cálculos |
+| **Trigger** | Executar ações automaticamente após eventos |
+| **Trigger Function** | Função especial executada por uma Trigger |
+
+## Fluxo da Trigger
+
+```text
+INSERT / UPDATE / DELETE
+          ↓
+       TRIGGER
+          ↓
+   TRIGGER FUNCTION
+          ↓
+     Ação Automática
+```
+
+Esses recursos são amplamente utilizados em sistemas corporativos para automatizar processos, centralizar regras de negócio e melhorar a organização e manutenção dos bancos de dados.
